@@ -1,5 +1,8 @@
 node_modules
 post-log.json
 pre-log.json
+notification-log.json
+stop-log.json
+subagent-stop-log.json
 .env
 .DS_Store

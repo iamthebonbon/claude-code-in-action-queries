@@ -15,11 +15,15 @@ process.stdin.on("end", () => {
     }
   }
 
-  // Block Bash commands that reference .env
+  // Block Bash commands that reference .env or .git
   if (toolName === "Bash") {
     const command = toolInput.command || "";
     if (/\.env(\b|$)/.test(command)) {
       console.error("You cannot read the .env file");
+      process.exit(2);
+    }
+    if (/\.git(\/|\b|$)/.test(command)) {
+      console.error("You cannot access the .git folder");
       process.exit(2);
     }
   }
