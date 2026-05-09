@@ -31,6 +31,11 @@ See `schema.ts` for the complete database schema definition.
   - `promotion_queries.ts` - Promotion queries
   - `review_queries.ts` - Product review queries
   - `shipping_queries.ts` - Shipping queries
+- `hooks/` - Claude Code hook scripts:
+  - `read_hook.js` - PreToolUse security hook (blocks `.env` and `.git` access)
+  - `query_hook.js` - PreToolUse duplicate-query detector for `src/queries/` (currently disabled)
+  - `tsc.js` - PostToolUse TypeScript type checker
+- `.claude/settings.local.json` - Active hook configuration
 
 ## Development Commands
 
@@ -62,6 +67,29 @@ export function getCustomerByEmail(db: Database, email: string): Promise<any> {
 }
 ```
 
+## Hooks & Automation
+
+Hook scripts in `hooks/` run automatically via `.claude/settings.local.json`:
+
+**read_hook.js** (PreToolUse: `Read | Bash`)
+
+- Blocks any `Read` call targeting a `.env` file
+- Blocks any `Bash` command referencing `.env` or `.git/`
+- Hard-blocks with exit code 2 — not advisory
+
+**query_hook.js** (PreToolUse: `Write | Edit | MultiEdit`)
+
+- Targets files inside `src/queries/`
+- Uses `@anthropic-ai/claude-agent-sdk` to detect duplicate query functions
+- Currently disabled (`process.exit(0)` at the top of `main()`)
+
+**tsc.js** (PostToolUse: `Write | Edit | MultiEdit`)
+
+- Runs on any `.ts`/`.tsx` file after a write
+- Executes `tsc --noEmit` against `tsconfig.json`
+- Exits with code 2 if type errors are found, blocking the operation
+
 ## Critical Guidance
 
 - Critical: All database queries must be written in the ./src/queries dir
+- Critical: `.env` and `.git/` are off-limits — the `read_hook` hard-blocks any attempt to read them
